@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de bord — AWIT</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="https://i.ibb.co/60WNQnd7/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body{ background:var(--sable); }
+  .admin-shell{ display:flex; min-height:100vh; }
+  .admin-side{
+    width:250px; flex-shrink:0; background:var(--encre); color:#fff; padding:24px 16px;
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  }
+  .admin-brand{ display:flex; align-items:center; gap:10px; padding:0 8px 24px; }
+  .admin-brand img{ width:36px; height:36px; border-radius:8px; object-fit:cover; }
+  .admin-brand span{ font-family:var(--ff-titre); font-weight:600; }
+  .admin-nav{ display:flex; flex-direction:column; gap:4px; flex:1; }
+  .admin-nav button{
+    display:flex; align-items:center; gap:10px; text-align:left; background:none; border:none; color:#C8DCE5;
+    padding:12px 14px; border-radius:12px; font-size:.92rem; font-weight:500; font-family:inherit;
+  }
+  .admin-nav button:hover{ background:rgba(255,255,255,.06); color:#fff; }
+  .admin-nav button.active{ background:var(--horizon); color:#fff; }
+  .admin-nav button .badge{ margin-left:auto; background:var(--soleil); color:var(--encre); font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:100px; }
+  .admin-user{ border-top:1px solid rgba(255,255,255,.12); padding-top:16px; margin-top:16px; }
+  .admin-user .email{ font-size:.78rem; color:#9FBAC6; margin-bottom:10px; word-break:break-all; }
+  .admin-logout{ width:100%; background:rgba(255,255,255,.08); color:#fff; border:none; padding:10px; border-radius:10px; font-size:.85rem; font-weight:600; }
+
+  .admin-main{ flex:1; padding:32px 40px; max-width:1100px; }
+  .admin-topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
+  .admin-topbar h1{ font-size:1.5rem; margin:0; }
+  .admin-panel{ display:none; }
+  .admin-panel.active{ display:block; }
+
+  .admin-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:32px; }
+  .admin-stat{ background:#fff; border-radius:16px; padding:20px; box-shadow:var(--ombre); }
+  .admin-stat .n{ font-family:var(--ff-titre); font-size:1.7rem; color:var(--horizon-d); }
+  .admin-stat .l{ font-size:.82rem; color:var(--encre-70); }
+
+  .admin-filter-bar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
+  .admin-filter-bar select{ padding:10px 14px; border-radius:10px; border:1.5px solid #E1E9EE; background:#fff; font-family:inherit; font-size:.85rem; }
+
+  .admin-table-wrap{ background:#fff; border-radius:18px; box-shadow:var(--ombre); overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+  .admin-table-wrap::-webkit-scrollbar{ height:8px; }
+  .admin-table-wrap::-webkit-scrollbar-track{ background:var(--ciel); }
+  .admin-table-wrap::-webkit-scrollbar-thumb{ background:var(--horizon); border-radius:100px; }
+  table.admin-table{ width:100%; min-width:720px; border-collapse:collapse; font-size:.88rem; }
+  table.admin-table th{ text-align:left; background:var(--ciel); color:var(--horizon-d); padding:12px 16px; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
+  table.admin-table td{ padding:12px 16px; border-top:1px solid #EEF3F6; vertical-align:top; }
+  #benevolesTableBody td:nth-child(4), #benevolesTableBody td:nth-child(6), #messagesTableBody td:nth-child(3){ max-width:260px; overflow-wrap:break-word; }
+  table.admin-table tr:hover td{ background:#FAFCFD; }
+  .pill{ display:inline-block; padding:3px 10px; border-radius:100px; font-size:.72rem; font-weight:700; }
+  .pill-new{ background:#FDEEDB; color:#C7791A; }
+  .pill-done{ background:#E4F5EB; color:var(--feuille-d); }
+  .row-actions{ display:flex; gap:8px; }
+  .row-actions button{ background:none; border:1px solid #E1E9EE; border-radius:8px; padding:5px 10px; font-size:.78rem; }
+  .row-actions button:hover{ background:var(--ciel); }
+  .row-actions button.danger{ color:#B3261E; border-color:#F3B9B4; background:#FDEAEA; }
+  .row-actions button.danger:hover{ background:#B3261E; color:#fff; border-color:#B3261E; }
+  .wa-btn{ display:inline-flex; align-items:center; gap:5px; background:#25D366; color:#fff !important; border-radius:8px; padding:5px 10px; font-size:.78rem; font-weight:600; text-decoration:none; }
+  .wa-btn:hover{ background:#1DA851; }
+  .scroll-hint{ display:none; font-size:.78rem; color:var(--encre-70); margin-bottom:10px; }
+  @media (max-width:760px){ .scroll-hint{ display:block; } }
+
+  .admin-empty{ padding:48px; text-align:center; color:var(--encre-70); }
+
+  .admin-form-card{ background:#fff; border-radius:18px; padding:28px; box-shadow:var(--ombre); margin-bottom:24px; }
+  .admin-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .admin-form-grid{ grid-template-columns:1fr; } .admin-stats{ grid-template-columns:repeat(2,1fr); } }
+  .thumb{ width:60px; height:44px; object-fit:cover; border-radius:8px; }
+  .loading-note{ padding:24px; color:var(--encre-70); font-size:.9rem; }
+
+  @media (max-width:860px){
+    .admin-shell{ flex-direction:column; }
+    .admin-side{ width:100%; height:auto; position:relative; flex-direction:row; overflow-x:auto; align-items:center; }
+    .admin-brand{ padding:0 12px 0 0; }
+    .admin-nav{ flex-direction:row; }
+    .admin-user{ display:none; }
+    .admin-main{ padding:24px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="authGate" class="loading-note">Vérification de la connexion...</div>
+
+<div class="admin-shell" id="adminShell" style="display:none;">
+
+  <aside class="admin-side">
+    <div class="admin-brand"><img src="https://i.ibb.co/60WNQnd7/logo.jpg" alt=""><span>AWIT Admin</span></div>
+    <nav class="admin-nav">
+      <button data-panel="dashboard" class="active">📊 Tableau de bord</button>
+      <button data-panel="actualites">📰 Actualités</button>
+      <button data-panel="galerie">🖼 Galerie</button>
+      <button data-panel="benevoles">🤝 Bénévoles <span class="badge" id="badgeBenevoles" style="display:none;">0</span></button>
+      <button data-panel="messages">✉ Messages <span class="badge" id="badgeMessages" style="display:none;">0</span></button>
+      <button data-panel="dons">❤ Dons <span class="badge" id="badgeDons" style="display:none;">0</span></button>
+    </nav>
+    <div class="admin-user">
+      <div class="email" id="userEmail"></div>
+      <button class="admin-logout" id="logoutBtn">Se déconnecter</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+
+    <!-- DASHBOARD -->
+    <section class="admin-panel active" id="panel-dashboard">
+      <div class="admin-topbar"><h1>Tableau de bord</h1></div>
+      <div class="admin-stats">
+        <div class="admin-stat"><div class="n" id="statActualites">–</div><div class="l">Actualités publiées</div></div>
+        <div class="admin-stat"><div class="n" id="statBenevoles">–</div><div class="l">Candidatures bénévoles</div></div>
+        <div class="admin-stat"><div class="n" id="statMessages">–</div><div class="l">Messages reçus</div></div>
+        <div class="admin-stat"><div class="n" id="statDons">–</div><div class="l">Dons déclarés</div></div>
+      </div>
+      <div class="admin-form-card">
+        <h3 class="mt-0">Bienvenue 👋</h3>
+        <p class="small mb-0">Utilisez le menu à gauche pour publier des actualités, ajouter des photos à la galerie, ou consulter les candidatures de bénévoles, messages et dons envoyés depuis le site.</p>
+      </div>
+    </section>
+
+    <!-- ACTUALITES -->
+    <section class="admin-panel" id="panel-actualites">
+      <div class="admin-topbar"><h1>Actualités</h1><button class="btn btn-horizon" id="newActuBtn">+ Nouvelle actualité</button></div>
+
+      <form class="admin-form-card" id="actuForm" style="display:none;">
+        <input type="hidden" id="actuId">
+        <div class="admin-form-grid">
+          <div class="field"><label for="actuTitre">Titre</label><input type="text" id="actuTitre" required></div>
+          <div class="field"><label for="actuTag">Catégorie</label>
+            <select id="actuTag">
+              <option>Événement</option><option>Culture</option><option>Sport</option><option>Sortie</option><option>Communiqué</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label for="actuTexte">Texte</label><textarea id="actuTexte" rows="3" required></textarea></div>
+        <div class="field"><label for="actuImgUrl">Image (URL ImgBB ou autre lien direct)</label><input type="url" id="actuImgUrl" placeholder="https://..." required></div>
+        <div style="display:flex; gap:10px;">
+          <button type="submit" class="btn btn-horizon">Enregistrer</button>
+          <button type="button" class="btn btn-outline-encre" id="cancelActuBtn">Annuler</button>
+        </div>
+        <p class="small" id="actuUploadStatus" style="margin-top:10px;"></p>
+      </form>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Photo</th><th>Titre</th><th>Catégorie</th><th>Date</th><th></th></tr></thead>
+          <tbody id="actuTableBody"><tr><td colspan="5" class="admin-empty">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- GALERIE -->
+    <section class="admin-panel" id="panel-galerie">
+      <div class="admin-topbar"><h1>Galerie</h1><button class="btn btn-horizon" id="newPhotoBtn">+ Ajouter une photo</button></div>
+
+      <form class="admin-form-card" id="photoForm" style="display:none;">
+        <input type="hidden" id="photoId">
+        <div class="admin-form-grid">
+          <div class="field"><label for="photoLegende">Légende</label><input type="text" id="photoLegende" required></div>
+          <div class="field"><label for="photoCat">Catégorie</label>
+            <select id="photoCat">
+              <option value="ateliers">Ateliers</option><option value="sport">Sport</option><option value="sorties">Sorties</option>
+              <option value="evenements">Événements</option><option value="soins">Soins</option><option value="ecoles">Classes dans les écoles</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label for="photoImgUrl">Image (URL ImgBB ou autre lien direct)</label><input type="url" id="photoImgUrl" placeholder="https://..." required></div>
+        <div style="display:flex; gap:10px;">
+          <button type="submit" class="btn btn-horizon">Enregistrer</button>
+          <button type="button" class="btn btn-outline-encre" id="cancelPhotoBtn">Annuler</button>
+        </div>
+        <p class="small" id="photoUploadStatus" style="margin-top:10px;"></p>
+      </form>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Photo</th><th>Légende</th><th>Catégorie</th><th></th></tr></thead>
+          <tbody id="photoTableBody"><tr><td colspan="4" class="admin-empty">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- BENEVOLES -->
+    <section class="admin-panel" id="panel-benevoles">
+      <div class="admin-topbar"><h1>Candidatures bénévoles</h1></div>
+      <div class="admin-filter-bar">
+        <select id="filterMoisBenevoles"><option value="">Tous les mois</option></select>
+        <select id="filterAnneeBenevoles"><option value="">Toutes les années</option></select>
+        <button type="button" class="btn btn-outline-encre" id="resetFilterBenevoles">Réinitialiser</button>
+      </div>
+      <p class="scroll-hint">↔ Faites glisser le tableau vers la gauche/droite pour voir toutes les colonnes.</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Nom</th><th>Contact</th><th>Ville</th><th>Compétences</th><th>Disponibilités</th><th>Motivation</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="benevolesTableBody"><tr><td colspan="8" class="admin-empty">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MESSAGES -->
+    <section class="admin-panel" id="panel-messages">
+      <div class="admin-topbar"><h1>Messages de contact</h1></div>
+      <div class="admin-filter-bar">
+        <select id="filterMoisMessages"><option value="">Tous les mois</option></select>
+        <select id="filterAnneeMessages"><option value="">Toutes les années</option></select>
+        <button type="button" class="btn btn-outline-encre" id="resetFilterMessages">Réinitialiser</button>
+      </div>
+      <p class="scroll-hint">↔ Faites glisser le tableau vers la gauche/droite pour voir toutes les colonnes.</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Nom</th><th>Contact</th><th>Sujet / Message</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="messagesTableBody"><tr><td colspan="5" class="admin-empty">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DONS -->
+    <section class="admin-panel" id="panel-dons">
+      <div class="admin-topbar"><h1>Dons déclarés</h1></div>
+      <p class="small">Ces dons sont déclarés par les visiteurs via le formulaire du site (virement bancaire). Ce ne sont pas des paiements en ligne automatiques — pensez à vérifier la réception sur votre compte bancaire avant de marquer un don comme reçu.</p>
+      <div class="admin-filter-bar">
+        <select id="filterMoisDons"><option value="">Tous les mois</option></select>
+        <select id="filterAnneeDons"><option value="">Toutes les années</option></select>
+        <button type="button" class="btn btn-outline-encre" id="resetFilterDons">Réinitialiser</button>
+      </div>
+      <p class="scroll-hint">↔ Faites glisser le tableau vers la gauche/droite pour voir toutes les colonnes.</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Nom</th><th>Contact</th><th>Montant</th><th>Méthode</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="donsTableBody"><tr><td colspan="6" class="admin-empty">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
