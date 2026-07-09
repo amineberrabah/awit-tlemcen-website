@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion admin — AWIT</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="https://i.ibb.co/60WNQnd7/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg, var(--ciel) 0%, var(--sable) 60%); }
+  .login-card{ width:100%; max-width:400px; background:#fff; border-radius:var(--rayon); padding:40px; box-shadow:var(--ombre-lg); }
+  .login-logo{ display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+  .login-logo img{ width:44px; height:44px; border-radius:10px; object-fit:cover; }
+  .login-logo span{ font-family:var(--ff-titre); font-weight:600; font-size:1.15rem; }
+  .login-error{ display:none; background:#FDEAEA; color:#B3261E; padding:12px 16px; border-radius:12px; font-size:.88rem; margin-bottom:16px; font-weight:600; }
+  .login-error.show{ display:block; }
+  .back-link{ display:block; text-align:center; margin-top:20px; font-size:.85rem; color:var(--encre-70); }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-logo">
+    <img src="https://i.ibb.co/60WNQnd7/logo.jpg" alt="Logo AWIT">
+    <span>AWIT — Espace admin</span>
+  </div>
+  <div class="login-error" id="loginError">Email ou mot de passe incorrect.</div>
+  <form id="loginForm">
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" required autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-horizon btn-bloc" id="loginBtn">Se connecter</button>
+  </form>
+  <a href="index.html" class="back-link">← Retour au site</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  // Si déjà connecté, on file directement au dashboard
+  auth.onAuthStateChanged((user) => {
+    if(user) window.location.href = "admin.html";
+  });
+
+  const form = document.getElementById('loginForm');
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errBox.classList.remove('show');
+    btn.disabled = true;
+    btn.textContent = "Connexion...";
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    try{
+      await auth.signInWithEmailAndPassword(email, password);
+      window.location.href = "admin.html";
+    }catch(err){
+      errBox.textContent = "Connexion impossible : email ou mot de passe incorrect.";
+      errBox.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = "Se connecter";
+    }
+  });
+</script>
+</body>
+</html>
